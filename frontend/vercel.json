@@ -6,8 +6,8 @@
       "destination": "https://jglqx50atf.execute-api.us-east-1.amazonaws.com/api/:path*"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/:path*",
+      "destination": "http://sige-web-alb-193549941.us-east-1.elb.amazonaws.com/:path*"
     }
   ]
 }
