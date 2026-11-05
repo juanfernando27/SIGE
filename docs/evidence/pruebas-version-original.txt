@@ -1,0 +1,61 @@
+VERSION()
+8.0.46-0ubuntu0.24.04.3
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> sige@1.0.0 db:migrate
+> npm run db:migrate -w backend
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> @sige/backend@1.0.0 db:migrate
+> node --import tsx src/migrate.ts
+
+Aplicada 001_initial.sql
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> sige@1.0.0 db:seed
+> npm run db:seed -w backend
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> @sige/backend@1.0.0 db:seed
+> node --import tsx src/seed.ts
+
+Datos de demostración creados.
+Usuarios locales: admin@sige.local, ventas@sige.local, inventario@sige.local. Contraseña: la configurada en SEED_ADMIN_PASSWORD o la indicada en README.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> sige@1.0.0 test:integration
+> node scripts/integration.mjs
+
+Aplicada 001_initial.sql
+Datos de demostración creados.
+Usuarios locales: admin@sige.local, ventas@sige.local, inventario@sige.local. Contraseña: la configurada en SEED_ADMIN_PASSWORD o la indicada en README.
+
+ RUN  v5.0.5 /workspace/scratch/4954f43768cf/SIGE/backend
+
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  12:44:29
+   Duration  2.78s (import 48%, tests 40%, transform 12%)
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> sige@1.0.0 test
+> npm run test -w backend
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> @sige/backend@1.0.0 test
+> vitest run src/tests/unit.test.ts
+
+
+ RUN  v5.0.5 /workspace/scratch/4954f43768cf/SIGE/backend
+
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  12:44:32
+   Duration  1.13s (import 80%, tests 15%, transform 5%)
+

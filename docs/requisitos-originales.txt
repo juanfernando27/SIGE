@@ -1,0 +1,426 @@
+# PROMPT MAESTRO — DESARROLLO COMPLETO DEL SISTEMA SIGE
+
+## 1. ROL Y OBJETIVO
+
+Actúa como un equipo senior de desarrollo de software compuesto por un arquitecto de soluciones AWS, ingeniero backend, desarrollador frontend, especialista en MySQL, experto en seguridad, ingeniero DevOps y responsable de pruebas.
+
+Necesito que diseñes y construyas un sistema de información empresarial completo, funcional y profesional llamado:
+
+**SIGE — Sistema Integral de Gestión Empresarial.**
+
+Es mi proyecto final de cátedra universitaria de Ingeniería de Sistemas.
+
+No quiero solamente documentación, explicaciones, pseudocódigo, prototipos visuales o fragmentos sueltos. Necesito un proyecto real que pueda abrir en Visual Studio Code, instalar, ejecutar en mi computador y posteriormente desplegar en Amazon Web Services.
+
+Utiliza razonamiento profundo para tomar decisiones técnicas coherentes, anticipar problemas y construir una aplicación mantenible.
+
+## 2. CONTEXTO ACADÉMICO
+
+El objetivo del proyecto es diseñar e implementar un sistema de información integral que utilice servicios AWS y aplique buenas prácticas de desarrollo y arquitectura en la nube.
+
+Los requisitos obligatorios de la materia incluyen:
+
+- Sistema de información completo y funcional.
+- Gestión sólida de datos.
+- Lógica de negocio.
+- Integración de servicios AWS.
+- Balanceo de carga mediante Application Load Balancer.
+- Autoescalamiento mediante EC2 Auto Scaling.
+- Alta disponibilidad.
+- Uso de MySQL y servicios de almacenamiento.
+- Posibilidad de utilizar inteligencia artificial durante el desarrollo.
+
+IMPORTANTE: no vamos a comenzar creando infraestructura AWS.
+
+**Primero necesito desarrollar y verificar todo el aplicativo localmente.**
+
+La arquitectura debe diseñarse desde el principio para permitir su posterior integración con AWS sin reconstruir innecesariamente el sistema.
+
+## 3. TECNOLOGÍAS DEFINIDAS
+
+Utiliza preferiblemente las siguientes tecnologías:
+
+Frontend:
+- React.
+- TypeScript.
+- Vite.
+- Bootstrap 5.
+- React Router.
+- Axios o Fetch.
+- Biblioteca de gráficos compatible con React.
+
+Backend:
+- Node.js con TypeScript.
+- Express.
+- API REST.
+- Arquitectura modular por capas.
+- Validaciones mediante Zod o alternativa compatible.
+- Manejo centralizado de errores.
+- Autenticación propia y control de acceso por roles.
+
+Base de datos:
+- MySQL 8 o versión compatible vigente.
+- ORM o constructor de consultas con soporte de migraciones, preferiblemente Drizzle ORM.
+- Migraciones reproducibles.
+- Datos iniciales de demostración.
+
+Herramientas:
+- Visual Studio Code.
+- npm.
+- Git y GitHub.
+- Postman.
+- Docker Compose para MySQL local, con alternativa documentada para XAMPP si resulta necesaria.
+- Vitest u otro framework de pruebas compatible.
+
+Utiliza versiones estables y compatibles entre sí. Evita dependencias abandonadas y documenta las versiones elegidas.
+
+## 4. ARQUITECTURA OBLIGATORIA
+
+Diseña una arquitectura que mantenga separadas la interfaz, la API, la lógica de negocio, el acceso a datos y la gestión de archivos.
+
+Estructura recomendada:
+
+SIGE/
+- frontend/
+- backend/
+- database/
+- infrastructure/
+- docs/
+- tests/
+- docker-compose.yml
+- README.md
+- .gitignore
+
+El backend debe separar:
+
+- Routes.
+- Controllers.
+- Services.
+- Repositories.
+- Models y schemas.
+- Middlewares.
+- Validators.
+- Config.
+- Storage providers.
+- Authentication.
+- Utilities.
+- Tests.
+
+La lógica de negocio no debe depender directamente de Express, de AWS Lambda ni de la interfaz.
+
+Los controladores y servicios deben poder reutilizarse posteriormente desde un adaptador para API Gateway y Lambda.
+
+Usa una aplicación Express ejecutable localmente y prepara una entrada Lambda compatible mediante un adaptador apropiado, manteniendo la misma lógica de negocio.
+
+No quiero mantener dos backends independientes, uno local y otro para AWS.
+
+## 5. MÓDULOS DEL SISTEMA
+
+Implementa los siguientes módulos completamente integrados.
+
+### Módulo 1. Autenticación y autorización
+
+- Inicio y cierre de sesión.
+- Contraseñas almacenadas mediante Argon2id o mecanismo seguro equivalente.
+- Tokens de acceso de duración limitada.
+- Renovación segura de sesiones.
+- Protección de rutas.
+- Control de permisos en el backend.
+- Roles: administrador, vendedor y encargado de inventario.
+- Gestión de estado de usuarios.
+- Perfil del usuario.
+
+Implementa autenticación con cookies HttpOnly y SameSite cuando corresponda, protección CSRF, configuración de HTTPS para producción y una estrategia segura para renovación de sesiones.
+
+La autorización debe verificarse en el servidor y nunca depender únicamente del menú visible.
+
+### Módulo 2. Dashboard
+
+Crear un panel administrativo moderno con:
+
+- Total de productos.
+- Total de clientes.
+- Total de proveedores.
+- Total de ventas.
+- Total de compras.
+- Ingresos por período.
+- Productos con bajo inventario.
+- Ventas recientes.
+- Gráficos de ventas.
+- Productos más vendidos.
+- Indicadores generales.
+
+Todos los datos deben proceder de MySQL, no de valores inventados en el frontend.
+
+### Módulo 3. Usuarios
+
+CRUD de usuarios, asignación de roles, estados, búsqueda, filtros, paginación y validaciones.
+
+### Módulo 4. Productos
+
+CRUD de productos con:
+
+- Código único.
+- Nombre.
+- Descripción.
+- Categoría.
+- Precio de compra.
+- Precio de venta.
+- Stock mínimo.
+- Estado.
+- Imagen.
+- Fechas de creación y actualización.
+
+### Módulo 5. Categorías
+
+CRUD de categorías y asociación con productos.
+
+### Módulo 6. Clientes
+
+CRUD con identificación, nombre, teléfono, correo, dirección, estado e historial de compras.
+
+### Módulo 7. Proveedores
+
+CRUD de proveedores y consulta de sus productos y compras relacionadas.
+
+### Módulo 8. Inventario
+
+- Existencias por producto.
+- Entradas y salidas.
+- Ajustes controlados.
+- Historial de movimientos.
+- Stock mínimo.
+- Alertas internas.
+- Control de existencias.
+- Validación para evitar ventas sin inventario suficiente.
+
+Cada movimiento debe quedar registrado.
+
+### Módulo 9. Compras
+
+- Registro de compras.
+- Selección de proveedor.
+- Agregar productos y cantidades.
+- Calcular subtotales y totales.
+- Manejo de estados.
+- Recepción de mercancía.
+- Actualización del inventario cuando corresponda.
+- Historial de compras.
+
+### Módulo 10. Ventas
+
+- Registrar ventas.
+- Seleccionar cliente.
+- Agregar múltiples productos.
+- Calcular subtotales y totales.
+- Validar disponibilidad.
+- Descontar inventario al confirmar.
+- Generar comprobantes.
+- Consultar historial.
+- Registrar anulaciones con sus movimientos de reversión.
+
+Utiliza transacciones MySQL para mantener la consistencia de ventas, compras e inventario. Considera concurrencia y evita descuentos duplicados.
+
+### Módulo 11. Documentos
+
+- Subir imágenes y documentos.
+- Asociar archivos con registros.
+- Consultar archivos.
+- Descargar archivos autorizados.
+- Validar tipos y tamaños.
+- Administrar metadatos.
+
+Implementa una interfaz de almacenamiento con dos proveedores:
+
+1. LocalStorageProvider para desarrollo.
+2. S3StorageProvider para AWS.
+
+El resto del sistema no debe depender directamente del proveedor utilizado.
+
+Prepara un flujo futuro de URLs prefirmadas de S3, sin exigir credenciales AWS durante el desarrollo local.
+
+### Módulo 12. Reportes
+
+- Reportes de ventas.
+- Reportes de compras.
+- Reportes de inventario.
+- Productos con pocas existencias.
+- Filtros por fechas.
+- Exportación a Excel o CSV.
+- Generación de reportes PDF.
+
+### Módulo 13. Auditoría
+
+- Usuario que ejecutó la acción.
+- Acción realizada.
+- Entidad afectada.
+- Identificador del registro.
+- Fecha y hora.
+- Cambios relevantes.
+- Resultado de la operación.
+
+Evita registrar contraseñas, tokens o información sensible innecesaria.
+
+### Módulo 14. Notificaciones internas
+
+Crear notificaciones dentro de la aplicación para alertas de inventario y eventos importantes.
+
+Deben funcionar utilizando MySQL, sin depender de Amazon SNS.
+
+## 6. BASE DE DATOS
+
+Diseña una base de datos relacional completa.
+
+Incluye, como mínimo, las entidades necesarias para:
+
+- Usuarios.
+- Roles.
+- Permisos.
+- Categorías.
+- Productos.
+- Imágenes.
+- Clientes.
+- Proveedores.
+- Inventarios.
+- Movimientos de inventario.
+- Compras.
+- Detalles de compra.
+- Ventas.
+- Detalles de venta.
+- Documentos.
+- Notificaciones.
+- Auditoría.
+- Sesiones de autenticación, si son necesarias.
+
+Debes entregar:
+
+1. Modelo entidad-relación.
+2. Tablas y relaciones.
+3. Claves primarias.
+4. Claves foráneas.
+5. Índices.
+6. Restricciones de integridad.
+7. Migraciones ejecutables.
+8. Seeds de demostración.
+9. Explicación de las relaciones importantes.
+
+Usa tipos DECIMAL apropiados para valores monetarios.
+
+No utilices números de punto flotante para cálculos financieros.
+
+Establece reglas claras para compras, ventas, estados y movimientos de inventario.
+
+## 7. INTERFAZ GRÁFICA
+
+Quiero una interfaz profesional, organizada y responsive.
+
+Debe incluir:
+
+- Login visualmente atractivo.
+- Menú lateral.
+- Barra superior.
+- Dashboard.
+- Tarjetas de estadísticas.
+- Tablas dinámicas.
+- Formularios de registro y edición.
+- Ventanas de confirmación.
+- Validaciones visibles.
+- Mensajes de éxito y error.
+- Indicadores de carga.
+- Estados vacíos.
+- Búsqueda y filtros.
+- Paginación.
+- Diseño adaptable a computador y dispositivos móviles.
+
+Utiliza un diseño corporativo moderno con colores coherentes, iconografía y tipografía legible.
+
+No quiero botones decorativos que no funcionen.
+
+Cada acción debe conectarse con el backend y mostrar resultados reales.
+
+## 8. API REST
+
+Diseña endpoints REST para todos los módulos.
+
+Ejemplo para productos:
+
+GET /api/products
+
+GET /api/products/:id
+
+POST /api/products
+
+PUT /api/products/:id
+
+DELETE /api/products/:id
+
+GET /api/products/low-stock
+
+Implementa rutas equivalentes para usuarios, clientes, proveedores, categorías, compras, ventas, documentos, reportes e inventario.
+
+Todas las API deben contar con:
+
+- Validación.
+- Autenticación donde sea necesaria.
+- Autorización por rol.
+- Manejo de errores.
+- Códigos HTTP correctos.
+- Respuestas JSON coherentes.
+- Paginación donde corresponda.
+- Documentación OpenAPI/Swagger.
+
+Incluye GET /api/health para comprobaciones de funcionamiento y GET /api/ready para verificar la disponibilidad de dependencias relevantes, con respuestas apropiadas.
+
+## 9. PREPARACIÓN PARA AWS
+
+Esta sección es obligatoria.
+
+Aunque todavía no vamos a implementar AWS, diseña y prepara el sistema considerando los siguientes servicios.
+
+### Amazon EC2
+
+En producción, EC2 alojará la aplicación frontend compilada mediante Nginx.
+
+La aplicación debe ser compatible con despliegues replicados en varias instancias.
+
+Evita almacenar sesiones, archivos persistentes o datos de negocio en el disco de EC2.
+
+Prepara un archivo de configuración Nginx que sirva el frontend y redirija /api hacia API Gateway en producción.
+
+Para desarrollo local utiliza un proxy de Vite hacia el backend.
+
+### Application Load Balancer
+
+La arquitectura futura utilizará un Application Load Balancer público para distribuir solicitudes entre las instancias EC2.
+
+Prepara rutas de comprobación de salud y documentación del comportamiento esperado.
+
+### EC2 Auto Scaling
+
+El proyecto debe contemplar:
+
+- Launch Template.
+- Auto Scaling Group.
+- Dos zonas de disponibilidad.
+- Capacidad mínima inicial de 2 instancias.
+- Capacidad deseada de 2.
+- Capacidad máxima de 4.
+- Política de escalamiento basada en métricas.
+- Health checks.
+- Reemplazo automático de instancias no saludables.
+
+Los valores definitivos deben poder configurarse.
+
+Prepara una prueba futura que permita verificar el balanceador y el autoescalamiento mediante carga controlada.
+
+No afirmes que el autoescalamiento funciona hasta que haya sido desplegado y probado realmente.
+
+### AWS Lambda
+
+Los CRUD y las operaciones principales del backend deben poder ejecutarse posteriormente en AWS Lambda.
+
+Mantén la lógica de negocio independiente del framework HTTP.
+
+Utiliza un adaptador Lambda/API Gateway para reutilizarla.
+
+Evita depender de almacenamiento local persistente o procesos en segundo plano que

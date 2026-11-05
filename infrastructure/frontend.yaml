@@ -1,0 +1,184 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: SIGE - frontend Nginx con ALB HTTPS y Auto Scaling. Preparado, no desplegado.
+Parameters:
+  VpcId: { Type: "AWS::EC2::VPC::Id" }
+  PublicSubnetA: { Type: "AWS::EC2::Subnet::Id" }
+  PublicSubnetB: { Type: "AWS::EC2::Subnet::Id" }
+  CertificateArn:
+    {
+      Type: String,
+      Description: Certificado ACM emitido para el dominio del frontend,
+    }
+  ArtifactBucket:
+    { Type: String, Description: Bucket privado con el paquete frontend tar.gz }
+  ArtifactKey: { Type: String, Default: releases/sige-web.tar.gz }
+  ApiHost:
+    {
+      Type: String,
+      AllowedPattern: "[a-zA-Z0-9.-]+",
+      Description: Hostname de HTTP API Gateway con stage default,
+    }
+  InstanceType: { Type: String, Default: t3.micro }
+  AmiId:
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  MinCapacity: { Type: Number, Default: 2, MinValue: 2 }
+  DesiredCapacity: { Type: Number, Default: 2, MinValue: 2 }
+  MaxCapacity: { Type: Number, Default: 4, MinValue: 2 }
+  RequestsPerTarget: { Type: Number, Default: 600, MinValue: 1 }
+Resources:
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Entrada HTTPS y redireccion HTTP
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0 }
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Nginx solo recibe solicitudes desde ALB
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - {
+            IpProtocol: tcp,
+            FromPort: 80,
+            ToPort: 80,
+            SourceSecurityGroupId: !Ref AlbSecurityGroup,
+          }
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ReadRelease
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub arn:${AWS::Partition}:s3:::${ArtifactBucket}/${ArtifactKey}
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: { Roles: [!Ref InstanceRole] }
+  Alb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Type: application
+      Subnets: [!Ref PublicSubnetA, !Ref PublicSubnetB]
+      SecurityGroups: [!Ref AlbSecurityGroup]
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VpcId
+      Port: 80
+      Protocol: HTTP
+      TargetType: instance
+      HealthCheckPath: /health
+      HealthCheckIntervalSeconds: 15
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher: { HttpCode: "200" }
+      TargetGroupAttributes:
+        - { Key: deregistration_delay.timeout_seconds, Value: "30" }
+  HttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref Alb
+      Port: 443
+      Protocol: HTTPS
+      Certificates: [{ CertificateArn: !Ref CertificateArn }]
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      DefaultActions: [{ Type: forward, TargetGroupArn: !Ref TargetGroup }]
+  HttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref Alb
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: redirect
+          RedirectConfig: { Protocol: HTTPS, Port: "443", StatusCode: HTTP_301 }
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: !Ref AmiId
+        InstanceType: !Ref InstanceType
+        IamInstanceProfile: { Arn: !GetAtt InstanceProfile.Arn }
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            AssociatePublicIpAddress: true
+            Groups: [!Ref WebSecurityGroup]
+        MetadataOptions: { HttpTokens: required, HttpEndpoint: enabled }
+        Monitoring: { Enabled: true }
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            set -euo pipefail
+            dnf install -y nginx awscli2
+            aws s3 cp s3://${ArtifactBucket}/${ArtifactKey} /tmp/web.tar.gz --region ${AWS::Region}
+            tar -xzf /tmp/web.tar.gz -C /usr/share/nginx/html
+            sed 's/__API_HOST__/${ApiHost}/g' /usr/share/nginx/html/nginx.conf > /etc/nginx/conf.d/sige.conf
+            rm -f /usr/share/nginx/html/nginx.conf
+            # Amazon Linux incluye un server default en nginx.conf; se reemplaza por el del proyecto.
+            cat > /etc/nginx/nginx.conf <<'NGINX'
+            user nginx;
+            worker_processes auto;
+            error_log /var/log/nginx/error.log;
+            pid /run/nginx.pid;
+            events { worker_connections 1024; }
+            http { include /etc/nginx/mime.types; default_type application/octet-stream; sendfile on; include /etc/nginx/conf.d/*.conf; }
+            NGINX
+            nginx -t
+            systemctl enable --now nginx
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: HttpsListener
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        { MinInstancesInService: 1, MaxBatchSize: 1, PauseTime: PT2M }
+    Properties:
+      MinSize: !Ref MinCapacity
+      DesiredCapacity: !Ref DesiredCapacity
+      MaxSize: !Ref MaxCapacity
+      VPCZoneIdentifier: [!Ref PublicSubnetA, !Ref PublicSubnetB]
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 180
+      DefaultInstanceWarmup: 180
+      TargetGroupARNs: [!Ref TargetGroup]
+      LaunchTemplate:
+        {
+          LaunchTemplateId: !Ref LaunchTemplate,
+          Version: !GetAtt LaunchTemplate.LatestVersionNumber,
+        }
+      Tags: [{ Key: Name, Value: sige-web, PropagateAtLaunch: true }]
+  ScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    DependsOn: HttpsListener
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        TargetValue: !Ref RequestsPerTarget
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ALBRequestCountPerTarget
+          ResourceLabel:
+            !Join [
+              "/",
+              [
+                !GetAtt Alb.LoadBalancerFullName,
+                !GetAtt TargetGroup.TargetGroupFullName,
+              ],
+            ]
+Outputs:
+  AlbDns: { Value: !GetAtt Alb.DNSName }
+  AutoScalingGroupName: { Value: !Ref AutoScalingGroup }
+  TargetGroupArn: { Value: !Ref TargetGroup }

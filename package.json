@@ -1,0 +1,27 @@
+{
+  "name": "sige",
+  "version": "1.1.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "typecheck": "npm run typecheck -w backend && npm run typecheck -w frontend",
+    "test": "npm run test -w backend",
+    "test:integration": "node scripts/integration.mjs",
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:seed": "npm run db:seed -w backend",
+    "start": "npm start -w backend",
+    "test:migration": "node --import tsx scripts/test-migration.mjs"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
+  }
+}

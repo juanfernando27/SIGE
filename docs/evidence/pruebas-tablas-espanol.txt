@@ -1,0 +1,73 @@
+[ { version: '8.0.46-0ubuntu0.24.04.3' } ]
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> sige@1.0.0 test:migration
+> node --import tsx scripts/test-migration.mjs
+
+PASS: 22 tablas de negocio y el historial con nombres españoles
+PASS: datos idénticos: roles → roles
+PASS: datos idénticos: permissions → permisos
+PASS: datos idénticos: role_permissions → roles_permisos
+PASS: datos idénticos: users → usuarios
+PASS: datos idénticos: auth_sessions → sesiones_autenticacion
+PASS: datos idénticos: used_refresh_tokens → tokens_renovacion_usados
+PASS: datos idénticos: login_attempts → intentos_inicio_sesion
+PASS: datos idénticos: categories → categorias
+PASS: datos idénticos: customers → clientes
+PASS: datos idénticos: suppliers → proveedores
+PASS: datos idénticos: products → productos
+PASS: datos idénticos: inventories → inventarios
+PASS: datos idénticos: sales → ventas
+PASS: datos idénticos: purchases → compras
+PASS: datos idénticos: sale_items → detalles_venta
+PASS: datos idénticos: purchase_items → detalles_compra
+PASS: datos idénticos: inventory_movements → movimientos_inventario
+PASS: datos idénticos: documents → documentos
+PASS: datos idénticos: product_images → imagenes_producto
+PASS: datos idénticos: notifications → notificaciones
+PASS: datos idénticos: notification_reads → lecturas_notificaciones
+PASS: datos idénticos: audit_logs → registros_auditoria
+PASS: historial original y su checksum conservados
+PASS: claves foráneas apuntan al esquema español
+PASS: segunda ejecución sin cambios de datos ni de historial
+PASS: recuperación si el renombrado terminó antes de registrar el historial
+PASS: esquema mezclado detenido sin renombrar datos
+PASS: AUTO_INCREMENT conservado después del cambio
+Migración verificada: 29 comprobaciones aprobadas.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> sige@1.0.0 test:integration
+> node scripts/integration.mjs
+
+Aplicada 001_initial.sql
+Aplicada 002_tablas_en_espanol.sql
+Datos de demostración creados.
+Usuarios locales: admin@sige.local, ventas@sige.local, inventario@sige.local. Contraseña: la configurada en SEED_ADMIN_PASSWORD o la indicada en README.
+
+ RUN  v5.0.5 /workspace/scratch/4954f43768cf/SIGE-espanol/backend
+
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  15:36:17
+   Duration  1.55s (import 53%, tests 38%, transform 9%)
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> sige@1.0.0 test
+> npm run test -w backend
+
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> @sige/backend@1.0.0 test
+> vitest run src/tests/unit.test.ts
+
+
+ RUN  v5.0.5 /workspace/scratch/4954f43768cf/SIGE-espanol/backend
+
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  15:36:19
+   Duration  895ms (import 78%, tests 15%, transform 6%)
+

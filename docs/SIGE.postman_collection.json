@@ -1,0 +1,1122 @@
+{
+  "info": {
+    "name": "SIGE REST API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Ejecutar GET csrf y POST login antes de los endpoints privados. Cookie jar habilitado. Sustituir bodies según OpenAPI para CRUD. Variables recordId y reportKind se usan en rutas."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "origin",
+      "value": "http://localhost:5173"
+    },
+    {
+      "key": "email",
+      "value": "admin@sige.local"
+    },
+    {
+      "key": "password",
+      "value": "SigeDemo!2026"
+    },
+    {
+      "key": "csrfToken",
+      "value": ""
+    },
+    {
+      "key": "recordId",
+      "value": "1"
+    },
+    {
+      "key": "reportKind",
+      "value": "sales"
+    }
+  ],
+  "item": [
+    {
+      "name": "GET /api/health",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/health",
+        "description": "Liveness sin dependencias"
+      }
+    },
+    {
+      "name": "GET /api/ready",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/ready",
+        "description": "Readiness de MySQL y almacenamiento"
+      }
+    },
+    {
+      "name": "GET /api/auth/csrf",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/csrf",
+        "description": "Obtener token CSRF"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) { const v = pm.response.json(); if (v.data && v.data.csrfToken) pm.collectionVariables.set('csrfToken', v.data.csrfToken); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /api/auth/login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "description": "Iniciar sesión; establece cookies HttpOnly",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) { const v = pm.response.json(); if (v.data && v.data.csrfToken) pm.collectionVariables.set('csrfToken', v.data.csrfToken); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /api/auth/refresh",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/refresh",
+        "description": "Rotar acceso, renovación y CSRF"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) { const v = pm.response.json(); if (v.data && v.data.csrfToken) pm.collectionVariables.set('csrfToken', v.data.csrfToken); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /api/auth/logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/logout",
+        "description": "Revocar sesión"
+      }
+    },
+    {
+      "name": "GET /api/auth/me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/me",
+        "description": "Perfil y permisos de la sesión"
+      }
+    },
+    {
+      "name": "PUT /api/auth/password",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/password",
+        "description": "Cambiar contraseña y revocar sesiones"
+      }
+    },
+    {
+      "name": "GET /api/dashboard",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/dashboard",
+        "description": "Indicadores calculados en MySQL"
+      }
+    },
+    {
+      "name": "GET /api/roles",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/roles",
+        "description": "Roles disponibles"
+      }
+    },
+    {
+      "name": "GET /api/categories",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "description": "Listar categories"
+      }
+    },
+    {
+      "name": "POST /api/categories",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories",
+        "description": "Crear categories"
+      }
+    },
+    {
+      "name": "GET /api/categories/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/{{recordId}}",
+        "description": "Consultar categories"
+      }
+    },
+    {
+      "name": "PUT /api/categories/{id}",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/{{recordId}}",
+        "description": "Actualizar categories"
+      }
+    },
+    {
+      "name": "DELETE /api/categories/{id}",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/categories/{{recordId}}",
+        "description": "Desactivar categories; conserva historial"
+      }
+    },
+    {
+      "name": "GET /api/products",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "description": "Listar products"
+      }
+    },
+    {
+      "name": "POST /api/products",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products",
+        "description": "Crear products"
+      }
+    },
+    {
+      "name": "GET /api/products/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/{{recordId}}",
+        "description": "Consultar products"
+      }
+    },
+    {
+      "name": "PUT /api/products/{id}",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/{{recordId}}",
+        "description": "Actualizar products"
+      }
+    },
+    {
+      "name": "DELETE /api/products/{id}",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/{{recordId}}",
+        "description": "Desactivar products; conserva historial"
+      }
+    },
+    {
+      "name": "GET /api/customers",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/customers",
+        "description": "Listar customers"
+      }
+    },
+    {
+      "name": "POST /api/customers",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/customers",
+        "description": "Crear customers"
+      }
+    },
+    {
+      "name": "GET /api/customers/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/customers/{{recordId}}",
+        "description": "Consultar customers"
+      }
+    },
+    {
+      "name": "PUT /api/customers/{id}",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/customers/{{recordId}}",
+        "description": "Actualizar customers"
+      }
+    },
+    {
+      "name": "DELETE /api/customers/{id}",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/customers/{{recordId}}",
+        "description": "Desactivar customers; conserva historial"
+      }
+    },
+    {
+      "name": "GET /api/suppliers",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/suppliers",
+        "description": "Listar suppliers"
+      }
+    },
+    {
+      "name": "POST /api/suppliers",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/suppliers",
+        "description": "Crear suppliers"
+      }
+    },
+    {
+      "name": "GET /api/suppliers/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/suppliers/{{recordId}}",
+        "description": "Consultar suppliers"
+      }
+    },
+    {
+      "name": "PUT /api/suppliers/{id}",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/suppliers/{{recordId}}",
+        "description": "Actualizar suppliers"
+      }
+    },
+    {
+      "name": "DELETE /api/suppliers/{id}",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/suppliers/{{recordId}}",
+        "description": "Desactivar suppliers; conserva historial"
+      }
+    },
+    {
+      "name": "GET /api/users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/users",
+        "description": "Listar users"
+      }
+    },
+    {
+      "name": "POST /api/users",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/users",
+        "description": "Crear users"
+      }
+    },
+    {
+      "name": "GET /api/users/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/users/{{recordId}}",
+        "description": "Consultar users"
+      }
+    },
+    {
+      "name": "PUT /api/users/{id}",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/users/{{recordId}}",
+        "description": "Actualizar users"
+      }
+    },
+    {
+      "name": "DELETE /api/users/{id}",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/users/{{recordId}}",
+        "description": "Desactivar users; conserva historial"
+      }
+    },
+    {
+      "name": "GET /api/products/low-stock",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/products/low-stock",
+        "description": "Productos bajo mínimo"
+      }
+    },
+    {
+      "name": "GET /api/sales",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/sales",
+        "description": "Historial de sales"
+      }
+    },
+    {
+      "name": "POST /api/sales",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/sales",
+        "description": "Crear borrador de sales; clave UUID idempotente",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"party_id\": 1,\n  \"request_key\": \"{{$guid}}\",\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 1\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "GET /api/sales/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/sales/{{recordId}}",
+        "description": "Detalle de sales"
+      }
+    },
+    {
+      "name": "POST /api/sales/{id}/confirm",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/sales/{{recordId}}/confirm",
+        "description": "Aplicar inventario de forma atómica e idempotente"
+      }
+    },
+    {
+      "name": "POST /api/sales/{id}/cancel",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/sales/{{recordId}}/cancel",
+        "description": "Anular; revierte inventario si fue aplicado",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"Anulación de demostración\"\n}"
+        }
+      }
+    },
+    {
+      "name": "GET /api/sales/{id}/receipt",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/sales/{{recordId}}/receipt",
+        "description": "Descargar comprobante interno"
+      }
+    },
+    {
+      "name": "GET /api/purchases",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/purchases",
+        "description": "Historial de purchases"
+      }
+    },
+    {
+      "name": "POST /api/purchases",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/purchases",
+        "description": "Crear borrador de purchases; clave UUID idempotente",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"party_id\": 1,\n  \"request_key\": \"{{$guid}}\",\n  \"items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 1,\n      \"unit_price\": \"45000.00\"\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "GET /api/purchases/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/purchases/{{recordId}}",
+        "description": "Detalle de purchases"
+      }
+    },
+    {
+      "name": "POST /api/purchases/{id}/receive",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/purchases/{{recordId}}/receive",
+        "description": "Aplicar inventario de forma atómica e idempotente"
+      }
+    },
+    {
+      "name": "POST /api/purchases/{id}/cancel",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/purchases/{{recordId}}/cancel",
+        "description": "Anular; revierte inventario si fue aplicado",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"Anulación de demostración\"\n}"
+        }
+      }
+    },
+    {
+      "name": "GET /api/purchases/{id}/receipt",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/purchases/{{recordId}}/receipt",
+        "description": "Descargar comprobante interno"
+      }
+    },
+    {
+      "name": "GET /api/customers/{id}/sales",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/customers/{{recordId}}/sales",
+        "description": "Historial paginado de ventas del cliente"
+      }
+    },
+    {
+      "name": "GET /api/suppliers/{id}/purchases",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/suppliers/{{recordId}}/purchases",
+        "description": "Historial paginado de compras al proveedor"
+      }
+    },
+    {
+      "name": "GET /api/inventory",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/inventory",
+        "description": "Existencias"
+      }
+    },
+    {
+      "name": "GET /api/inventory/movements",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/inventory/movements",
+        "description": "Kárdex de movimientos"
+      }
+    },
+    {
+      "name": "POST /api/inventory/adjustments",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/inventory/adjustments",
+        "description": "Ajustar existencias con motivo obligatorio",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 1,\n  \"reason\": \"Ajuste de demostración\"\n}"
+        }
+      }
+    },
+    {
+      "name": "GET /api/documents",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/documents",
+        "description": "Documentos permitidos al usuario"
+      }
+    },
+    {
+      "name": "POST /api/documents",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/documents",
+        "description": "Subir archivo de hasta 5 MB"
+      }
+    },
+    {
+      "name": "GET /api/documents/{id}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/documents/{{recordId}}",
+        "description": "Metadatos autorizados"
+      }
+    },
+    {
+      "name": "DELETE /api/documents/{id}",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/documents/{{recordId}}",
+        "description": "Eliminar documento"
+      }
+    },
+    {
+      "name": "GET /api/documents/{id}/download",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/documents/{{recordId}}/download",
+        "description": "Descargar archivo autorizado"
+      }
+    },
+    {
+      "name": "POST /api/documents/{id}/download-url",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/documents/{{recordId}}/download-url",
+        "description": "URL S3 prefirmada de lectura; 60 segundos"
+      }
+    },
+    {
+      "name": "GET /api/reports/{kind}",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/reports/{{reportKind}}",
+        "description": "Reporte JSON, CSV o PDF; máximo 10.000 filas"
+      }
+    },
+    {
+      "name": "GET /api/audit",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/audit",
+        "description": "Auditoría; solo administrador"
+      }
+    },
+    {
+      "name": "GET /api/notifications",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/notifications",
+        "description": "Notificaciones y lecturas individuales"
+      }
+    },
+    {
+      "name": "POST /api/notifications/{id}/read",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Origin",
+            "value": "{{origin}}"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrfToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/notifications/{{recordId}}/read",
+        "description": "Marcar como leída"
+      }
+    }
+  ]
+}

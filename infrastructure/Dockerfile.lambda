@@ -1,0 +1,14 @@
+FROM public.ecr.aws/lambda/nodejs:24 AS build
+WORKDIR /build
+COPY package.json package-lock.json ./
+COPY backend/package.json backend/package.json
+COPY frontend/package.json frontend/package.json
+RUN npm ci
+COPY backend/tsconfig.json backend/tsconfig.json
+COPY backend/src backend/src
+RUN npm run build -w backend && npm prune --omit=dev -w backend --include-workspace-root=false
+FROM public.ecr.aws/lambda/nodejs:24
+COPY --from=build /build/node_modules ${LAMBDA_TASK_ROOT}/node_modules
+COPY --from=build /build/backend/dist ${LAMBDA_TASK_ROOT}/backend/dist
+COPY backend/package.json ${LAMBDA_TASK_ROOT}/backend/package.json
+CMD ["backend/dist/lambda.handler"]

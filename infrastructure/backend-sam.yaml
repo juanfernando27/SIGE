@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: SIGE API Gateway y Lambda - requiere RDS Multi-AZ, RDS Proxy y red previamente configurados.
+Parameters:
+  DatabaseUrl:
+    {
+      Type: String,
+      NoEcho: true,
+      Description: URL de MySQL a traves de RDS Proxy; usar referencia dinamica a Secrets Manager,
+    }
+  DatabaseCaBase64:
+    {
+      Type: String,
+      Default: "",
+      Description: CA de confianza base64 si el proxy no usa una CA publica confiable,
+    }
+  AppOrigin:
+    {
+      Type: String,
+      AllowedPattern: "https://[^/]+",
+      Description: Origen HTTPS exacto del frontend,
+    }
+  PrivateSubnets: { Type: "List<AWS::EC2::Subnet::Id>" }
+  LambdaSecurityGroups: { Type: "List<AWS::EC2::SecurityGroup::Id>" }
+Resources:
+  FilesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        {
+          BlockPublicAcls: true,
+          BlockPublicPolicy: true,
+          IgnorePublicAcls: true,
+          RestrictPublicBuckets: true,
+        }
+      BucketEncryption:
+        {
+          ServerSideEncryptionConfiguration:
+            [{ ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 } }],
+        }
+      VersioningConfiguration: { Status: Enabled }
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+      DefaultRouteSettings:
+        { ThrottlingBurstLimit: 50, ThrottlingRateLimit: 25 }
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: infrastructure/Dockerfile.lambda
+      DockerContext: ..
+      DockerTag: sige-api-v1
+    Properties:
+      PackageType: Image
+      Architectures: [x86_64]
+      MemorySize: 512
+      Timeout: 28
+      ReservedConcurrentExecutions: 10
+      VpcConfig:
+        {
+          SubnetIds: !Ref PrivateSubnets,
+          SecurityGroupIds: !Ref LambdaSecurityGroups,
+        }
+      Environment:
+        Variables:
+          NODE_ENV: production
+          DATABASE_URL: !Ref DatabaseUrl
+          DATABASE_TLS: "true"
+          DATABASE_CA_BASE64: !Ref DatabaseCaBase64
+          APP_ORIGIN: !Ref AppOrigin
+          STORAGE_PROVIDER: s3
+          S3_BUCKET: !Ref FilesBucket
+          TRUST_PROXY_HOPS: "1"
+      Policies:
+        - S3CrudPolicy: { BucketName: !Ref FilesBucket }
+      Events:
+        Root:
+          {
+            Type: HttpApi,
+            Properties: { ApiId: !Ref HttpApi, Path: /, Method: ANY },
+          }
+        Proxy:
+          {
+            Type: HttpApi,
+            Properties: { ApiId: !Ref HttpApi, Path: "/{proxy+}", Method: ANY },
+          }
+Outputs:
+  ApiHost:
+    { Value: !Sub "${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}" }
+  FilesBucketName: { Value: !Ref FilesBucket }
